@@ -83,11 +83,8 @@ export class ENS {
   }
 
   async getResolver(name) {
-    const provider = await getProvider()
-    let resolver = await provider.getResolver(name)
-    if(resolver){
-      return resolver.address
-    }
+    const namehash = getNamehash(name)
+    return this.ENS.resolver(namehash)
   }
 
   async _getResolverObject(name) {
@@ -119,16 +116,19 @@ export class ENS {
   }
 
   async getAddr(name, key) {
-    if(!name) return emptyAddress
+    if (!name) return emptyAddress
     const resolver = await this._getResolverObject(name)
-    if(!resolver) return emptyAddress
+    if (!resolver) return emptyAddress
     try {
       const { coinType, encoder } = formatsByName[key]
-      const encodedCoinType = utils.hexZeroPad(BigNumber.from(coinType).toHexString(), 32)
+      const encodedCoinType = utils.hexZeroPad(
+        BigNumber.from(coinType).toHexString(),
+        32
+      )
       const data = await resolver._fetchBytes('0xf1cb7e06', encodedCoinType)
-      if([emptyAddress, '0x', null].includes(data) ) return emptyAddress
-      let buffer = Buffer.from(data.slice(2), "hex")
-      return encoder(buffer);
+      if ([emptyAddress, '0x', null].includes(data)) return emptyAddress
+      let buffer = Buffer.from(data.slice(2), 'hex')
+      return encoder(buffer)
     } catch (e) {
       console.log(e)
       console.warn(
@@ -189,7 +189,7 @@ export class ENS {
 
   async getText(name, key) {
     const resolver = await this._getResolverObject(name)
-    if(!resolver) return ''
+    if (!resolver) return ''
     try {
       const addr = await resolver.getText(key)
       return addr
@@ -496,7 +496,7 @@ export class ENS {
     let namehash = getNamehash(reverseNode)
     return Resolver.setName(namehash, name)
   }
-  async supportsWildcard(name){
+  async supportsWildcard(name) {
     const provider = await getProvider()
     const resolverAddress = await this.getResolver(name)
     const Resolver = getResolverContract({
